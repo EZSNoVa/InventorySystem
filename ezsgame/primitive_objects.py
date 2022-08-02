@@ -25,10 +25,8 @@ class PRect(PObject):
                 
     def draw(self):
         vars = self.__dict__
-        try:
-            pg.draw.rect(self.screen.surface, vafrs.get("color", "white"), [*vars.get("pos", [0,0]), *vars.get("size", [0,0])], int(vars.get("stroke", 0)), *vars.get("border_radius", [0,0,0,0]))
-        except:
-            pass
+        pg.draw.rect(self.screen.surface, vars.get("color", "white"), [*vars.get("pos", [0,0]), *vars.get("size", [10,10])], int(vars.get("stroke", 0)), *vars.get("border_radius", [0,0,0,0]))
+
         
 
 

@@ -134,20 +134,19 @@ class StructuredRect(Object):
         for item in self.items:
             item.draw()
 
-class Menu: 
+class Menu(Object): 
     def __init__(self, data : dict):
-        self.id = get_id()
-        self.screen = get_screen()
         self.spacing = data.get("spacing", 15)
-        self.pos = data.get("pos", [0,0])
-        self.size = data.get("size", ["50%", "100%"])
-        
-        self.size = (obj:=Object(size=self.size, pos=self.pos)).get_size() 
-        self.pos = obj.get_pos()
+    
+        super().__init__(data.get("pos", [0,0]), data.get("size", ["50%", "100%"]))
 
-        if "background" not in data or  not isinstance(data["background"], Image) and not isinstance(data["background"], Gradient):
-            self.background = PRect(screen=self.screen, pos=self.pos, size=self.size, color=data.get("background", "black"),
-                                stroke=0)
+        # if no background is given
+        if "background" not in data:
+            self.background = PRect(screen=self.screen, pos=self.pos, size=self.size, color="black")            
+        
+        elif isinstance(data["background"], str):
+            self.background = PRect(screen=self.screen, pos=self.pos, size=self.size, color=data["background"])
+            
         elif isinstance(data["background"], Image):
             self.background = data["background"]
             self.background.pos = self.pos
@@ -175,9 +174,18 @@ class Menu:
         _current_y = self.title.pos[1] + self.title.size[1] + self.spacing # vertical align
         _current_x = self.title.pos[0] + self.spacing # horizontal align
         
-        width_div = self.size[0] // len(data.get("items", [None]))  - self.spacing
+        # get items
+        if isinstance( (data_items := data.get("items", [] )), int):
+            items = data["items"] = [{}] * data_items
         
-        for item in data.get("items", []):
+        else:
+            items = data_items
+        
+        width_div = self.size[0] // len(items)  - self.spacing
+        
+                    
+        # process items
+        for item in items:
             for k,v in self.__dict__["_items_styles"].items():
                 if k not in item:
                     item[k] = v
@@ -193,6 +201,11 @@ class Menu:
                     item["pos"] = [item["pos"][0], _current_y]
             
                 _current_y += item["size"][1] + self.spacing
+                
+                # if overflow, move to next line
+                if _current_y + item["size"][1] > self.size[1]:
+                    _current_y = self.title.pos[1] + self.title.size[1] + self.spacing
+                    _current_x += width_div + self.spacing
 
             else:
                 if "size" not in item:
@@ -208,7 +221,12 @@ class Menu:
                 
             self.items.append(StructuredRect(**item))
             
-        total_size = self.items[-1].total_size
+        if self.items:
+            total_size = self.items[-1].total_size
+        
+        else:
+            total_size = [_current_x - self.spacing/2, _current_y - self.spacing/2]
+        
         _current_x = total_size[0] + self.spacing
         _current_y = total_size[1] + self.spacing
         

@@ -1,3 +1,4 @@
+from typing import List
 import pygame as pg, random
 from ..objects import Object, Group, Circle, Rect, Text
 from pathfinding.core.diagonal_movement import DiagonalMovement
@@ -59,9 +60,9 @@ class IObject:
    
 
 class Grid(Object):
-	def __init__(self, pos, size, grid_size, **styles):
+	def __init__(self, pos, size, grid_size:List[int], **styles):
 		super().__init__(pos, size, **styles)
-		self.box_color = styles.get("box_color", "white")
+		self.box_styles = styles.get("box_styles", {})
 		self.grid_size = grid_size
 		self.matrix = self.grid_div(*self.grid_size) 
 		self.grid = self.grid_split(self.matrix, self.grid_size[1])
@@ -97,9 +98,14 @@ class Grid(Object):
 		for i in range(cols):
 			for j in range(rows):
 				if transpose:
-					grid.append([divs_x[j][0], divs_y[i][0], box_width, box_height])
+					grid.append([divs_x[j][0] + self.pos[0], 
+                  				divs_y[i][0] + self.pos[1], 
+                     			box_width, box_height])
 				else:
-					grid.append([divs_x[i][0], divs_y[j][0], box_width, box_height])
+					grid.append([divs_x[i][0] + self.pos[0], 
+                  				divs_y[j][0] + self.pos[1], 
+                      			box_width, box_height])
+     
 		self.grid_space = len(grid)
 		self.grid_box_size = [box_width, box_height]
 		return grid
@@ -112,7 +118,7 @@ class Grid(Object):
 			grid_size = grid_size[1]
 		
 		grid = [matrix[i:i+grid_size] for i in range(0, len(matrix), grid_size)]
-		return [[PRect(pos=i[:2], size=i[2:], color=self.box_color)  for i in row] for row in grid]
+		return [[Rect(pos=i[:2], size=i[2:], **self.box_styles)  for i in row] for row in grid]
 	
 	def draw(self):
 		screen = self.screen

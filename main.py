@@ -1,5 +1,5 @@
 # inicializacion de la pantalla (Max. Priority)
-from ezsgame.basics import *
+from ezsgame.all import *
 screen: Screen = Screen(title="Inventory System", show_fps=True, color="white")
 
 # IMPORTS -----------------------------------------------------------------------------------------------
@@ -7,6 +7,7 @@ from UI import Interfaz
 
 
 # Incializacion de variables -------------------------------------------------------------------------
+Interfaz.init()
 
 
 # Mainloop
