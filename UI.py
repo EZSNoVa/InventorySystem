@@ -1,53 +1,108 @@
+from turtle import back
+from typing import Dict
 from ezsgame.all import *
+from vistas import right, left
 
 screen: Screen = get_screen()
-
-
+    
+def get_arrow(direction:str, view_direction:str) -> Image:
+    """
+    #### Retornate el objeto de la flecha apuntado hacia x direction para moverte entre vistas
+    
+    #### Params
+    - direction : left, right, up or down
+    - to_return : invierte la flecha si es True
+    """
+    
+    # calculate pos
+    arrow: Image = Image(pos=[0,0], size=[35,35], image="assets/img/arrow.png")
+    
+    if direction == "left":
+        arrow.pos[0] = 20
+        center(screen, arrow, x_axis=False)
+        arrow.rotate(90)
+    
+    elif direction == "right":
+        arrow.pos[0] = screen.size[0] - arrow.get_size()[0] - 20
+        center(screen, arrow, x_axis=False)
+        arrow.rotate(-90)
+        
+    arrow.extends(IObject)
+        
+    arrow.__setattr__("direction", view_direction)
+    
+    return arrow 
+      
 class Interfaz:
-    # Aqui de declaran los objetos necessarios para la interfaz
+    """
+    Clase que maneja la inferfaz
+    En esta clase solo deben hacer cosas que sean necesarias para la interfaz principal
+    """
     
-    # variables ---------------------------------------------------------------------------------------
-    inventory_open: bool = False
+    # Inicializacion de objetos -------------------------------------------------------------------------
+    current_view: str = "main"    
     
-    # objectos ---------------------------------------------------------------------------------------
+    to_left_arrow, to_right_arrow = get_arrow("left", "left"), get_arrow("right", "right")
+    back_right_arrow, back_left_arrow = get_arrow("right", "main"), get_arrow("left", "mian")
     
-    #Inventario 
-    title = Text("Inventory", pos=[0,20], color="black", fontsize=30)
-    center(screen, title, y_axis=False)
-    
-    slots = Grid(pos=[35, title.get_pos()[1] + 100], size=["90%", "60%"], grid_size=[6,3],
-                 box_styles={
-                        "color": "black",
-                        "stroke" : 1,
-                        "border_radius": [10,10,10,10]
-                 })
-    
-    
-    inventory: Group = Group(
-        title, slots
-    )
-    
-    # Textos
-    open_inventory_text = Text("Press \"e\" to open Inventory" , pos=["center","center"], color="black", fontsize=30)
-    
+        
+    arrows: Dict[str, Group] = {
+            "main" : Group(to_left_arrow, to_right_arrow),
+            "left" : Group(back_right_arrow),
+            "right" : Group(back_left_arrow)
+        }
 
+    main_text = Text("Click arrows to change view", pos=["center","center"], fontsize=40, color="black")
+    
+    # DRAWING GROUPS -----------------------------------------------------------------------------------
+    views = {
+        "left" : left.View,
+        "right" : right.View
+    }
+    
+    
     # dibuja los objetos
     def draw() -> None:    
         
-        # dibuja el inventario si esta abierto
-        if Interfaz.inventory_open:
-            Interfaz.inventory.draw()
+        # dibuja la vista principal
+        if Interfaz.current_view == "main":
+            Interfaz.main_text.draw()
             
-        #  dibuja el texto que te indica como abrir el inventario si esta cerrado
         else:
-            Interfaz.open_inventory_text.draw()
-            
+            # dibuja la vista actual
+            Interfaz.views[Interfaz.current_view].draw()        
+
+        # dibuja las flechas
+        Interfaz.arrows[Interfaz.current_view].draw()
     
-    # inicializa la interfaz
+    # inicializa la interfaz y las vistas
     def init() -> None:
+        Interfaz.change_view(Interfaz.current_view)
         
-        # Abrir y cerrar el inventario
-        # Al presionar la "e" se abre el inventario y se cierra cuando se presiona otra vez
-        @screen.on_key("down", ["e"])
-        def open_inventory():
-            Interfaz.inventory_open = not Interfaz.inventory_open
+        for view_obj in Interfaz.views.values():
+            view_obj.init()
+    
+
+    def change_view(new_view:str):
+        # remove events from arrows
+        if new_view in ("left", "right"):
+            screen.remove_event("to_left_arrow_event")
+            screen.remove_event("to_right_arrow_event")
+            
+        else:
+            screen.remove_event("back_right_arrow_event")
+            screen.remove_event("back_left_arrow_event")
+
+        # add events to arrows
+        if new_view == "left":
+            Interfaz.back_right_arrow.click(lambda: Interfaz.change_view("main"), "back_right_arrow_event")
+
+        elif new_view == "right":
+            Interfaz.back_left_arrow.click(lambda: Interfaz.change_view("main"), "back_left_arrow_event")
+        
+        else:
+            Interfaz.to_left_arrow.click(lambda: Interfaz.change_view("left"), "to_left_arrow_event")
+            Interfaz.to_right_arrow.click(lambda: Interfaz.change_view("right"), "to_right_arrow_event")
+            
+        Interfaz.current_view = new_view
+        Interfaz.draw()

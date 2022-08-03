@@ -511,6 +511,19 @@ class Image(Rect):
 		
 	def draw(self):
 		self.screen.surface.blit(self.image, self.get_pos())
+  
+	def rotate(self, angle):
+		self.image = pg.transform.rotate(self.image, angle)
+		self.size = [self.image.get_width(), self.image.get_height()]
+  
+	def flip(self, x_axis: bool = True, y_axis: bool = False):
+		self.image = pg.transform.flip(self.image, x_axis, y_axis)
+		self.size = [self.image.get_width(), self.image.get_height()]
+  
+	def scale(self, new_size: Size):
+		self.image = pg.transform.scale(self.image, new_size)
+		self.size = [self.image.get_width(), self.image.get_height()]
+
 	  
 class Circle(Object):
 	r'''
@@ -573,10 +586,15 @@ class Group:
 	def __getitem__(self, other):
 		if isinstance(other, int):
 			return self.objects[other]
+
 		elif isinstance(other, slice):
 			return self.__getslice__(other)
+
+		elif isinstance(other, Object):
+			return self.objects[self.objects.index(other)]
+
 		else:
-			raise TypeError("Index must be an integer or slice")
+			raise TypeError("Index must be an integer, slice or Object")
 		
 	def __contains__(self, thing):
 		return thing in self.objects
@@ -633,6 +651,9 @@ class Group:
 
 	def copy(self):
 		return Group(*self.objects)
+
+	def __add__(a, b):
+		return Group(*a, *b)
 
 class Line:
     def __init__(self, start: Pos, end: Pos, width: int = 5, **styles):

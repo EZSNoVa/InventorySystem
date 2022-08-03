@@ -37,16 +37,16 @@ class IObject:
 		self.clicked = True
 		func()
         
-	def click(self, func):
-		self.screen.events.add_event("click", self.object, lambda: self._process_click(func))
+	def click(self, func, event_name="Default"):
+		self.screen.events.add_event("click", self.object, lambda: self._process_click(func), event_name)
 		return func
 	
-	def hover(self, func):
-		self.screen.events.add_event("hover", self.object, func)
+	def hover(self, func, event_name="Default"):
+		self.screen.events.add_event("hover", self.object, func, event_name)
 		return func
 
-	def unhover(self, func):
-		self.screen.events.add_event("unhover", self.object, func)
+	def unhover(self, func, event_name="Default"):
+		self.screen.events.add_event("unhover", self.object, func, event_name)
 		return func
 	
 	def _process_unclick(self, func):
@@ -54,8 +54,8 @@ class IObject:
 			self.clicked = False
 			func()
 			
-	def unclick(self, func):
-		self.screen.events.on_event("mouseup", lambda : self._process_click(func))
+	def unclick(self, func, event_name="Default"):
+		self.screen.events.on_event("mouseup", lambda : self._process_click(func), event_name)
 		return func
    
 
